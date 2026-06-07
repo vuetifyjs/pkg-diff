@@ -221,7 +221,7 @@
     </header>
 
     <!-- Inputs -->
-    <div class="rounded-xl border border-subtle bg-surface p-5 mb-4">
+    <div class="relative rounded-xl border border-subtle bg-surface p-5 mb-4">
       <div class="grid gap-x-3 gap-y-2 sm:grid-cols-[1fr_auto_1fr] items-end">
         <div>
           <label class="block text-xs font-medium uppercase tracking-wide text-on-surface opacity-50 mb-2">
@@ -307,72 +307,49 @@
         </label>
 
         <CopyButton
-          class="ml-auto"
+          class="ml-auto -mr-2 opacity-25 hover:opacity-100 focus:opacity-100"
           :disabled="!canShare"
           label="Copy shareable link"
+          size="sm"
           :value="shareUrl"
         />
 
-        <button
-          v-show="loading"
-          class="flex flex-row items-center gap-2 ml-auto px-5 py-2 rounded-lg bg-primary text-on-primary font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
-          :disabled="aborting"
-          type="button"
-          @click="abort"
-        >
-          <svg v-if="aborting" height="1em" viewBox="0 0 24 24" width="1em">
-            <path d="M0 0h24v24H0z" fill="none" />
+        <div class="relative">
+          <button
+            class="flex w-36 items-center justify-center px-5 py-2 font-medium rounded-lg transition-[background-color,opacity] disabled:opacity-50"
+            :class="[
+              aborting ? 'bg-warning text-on-warning' : 'bg-primary text-on-primary hover:opacity-90',
+              loading && !aborting ? 'pr-8' : '',
+            ]"
+            :disabled="loading"
+            type="button"
+            @click="run"
+          >
+            {{ aborting ? 'Aborting…' : loading ? 'Diffing…' : 'Compare' }}
+          </button>
 
-            <path
-              d="M12 3c4.97 0 9 4.03 9 9"
+          <button
+            v-show="loading && !aborting"
+            aria-label="Abort"
+            class="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center justify-center w-7 h-7 rounded-md bg-error text-on-error hover:opacity-90 transition-opacity"
+            title="Abort"
+            type="button"
+            @click="abort"
+          >
+            <svg
+              aria-hidden="true"
               fill="none"
+              height="1em"
               stroke="currentColor"
               stroke-linecap="round"
-              stroke-linejoin="round"
               stroke-width="2"
+              viewBox="0 0 24 24"
+              width="1em"
             >
-              <animateTransform
-                attributeName="transform"
-                dur="1.5s"
-                repeatCount="indefinite"
-                type="rotate"
-                values="0 12 12;360 12 12"
-              />
-            </path>
-          </svg>
-
-          <span>{{ aborting ? 'Aborting…' : 'Abort' }}</span>
-        </button>
-
-        <button
-          class="px-5 py-2 rounded-lg bg-primary text-on-primary font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
-          :disabled="loading || aborting"
-          type="button"
-          @click="run"
-        >
-          <svg v-if="loading" height="1em" viewBox="0 0 24 24" width="1em">
-            <path d="M0 0h24v24H0z" fill="none" />
-
-            <path
-              d="M12 3c4.97 0 9 4.03 9 9"
-              fill="none"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-            >
-              <animateTransform
-                attributeName="transform"
-                dur="1.5s"
-                repeatCount="indefinite"
-                type="rotate"
-                values="0 12 12;360 12 12"
-              />
-            </path>
-          </svg>
-
-          <span>{{ loading ? 'Diffing…' : 'Compare' }}</span>
-        </button>
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -391,7 +368,13 @@
     </div>
 
     <!-- Status -->
-    <LoadingState v-if="loading" class="mb-4" :detail="detail" :stage="stage" />
+    <LoadingState
+      v-if="loading"
+      :aborting="aborting"
+      class="mb-4"
+      :detail="detail"
+      :stage="stage"
+    />
 
     <div
       v-if="error"
