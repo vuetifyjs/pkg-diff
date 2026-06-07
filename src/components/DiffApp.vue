@@ -222,7 +222,7 @@
             Base (A)
           </label>
 
-          <div class="flex gap-2">
+          <div class="flex flex-col gap-2 lg:flex-row">
             <div class="flex-1 min-w-0">
               <AutocompleteInput
                 v-model="a.name"
@@ -232,7 +232,7 @@
               />
             </div>
 
-            <div class="w-36 shrink-0">
+            <div class="w-full shrink-0 lg:w-55">
               <AutocompleteInput
                 v-model="a.version"
                 aria-label="Base version"
@@ -247,7 +247,7 @@
 
         <button
           aria-label="Swap A and B"
-          class="self-end justify-self-center w-9 h-9 shrink-0 inline-flex items-center justify-center rounded-lg border border-subtle text-on-surface hover:bg-surface-tint hover:border-primary transition-colors sm:mb-0.5"
+          class="self-end justify-self-center w-9 h-9 shrink-0 inline-flex items-center justify-center rounded-lg border border-subtle text-on-surface hover:bg-surface-tint hover:border-primary transition-colors sm:mb-6 lg:mb-[1px]"
           title="Swap A and B"
           type="button"
           @click="swap"
@@ -260,7 +260,7 @@
             Compare (B)
           </label>
 
-          <div class="flex gap-2">
+          <div class="flex flex-col gap-2 lg:flex-row">
             <div class="flex-1 min-w-0">
               <AutocompleteInput
                 v-model="b.name"
@@ -270,7 +270,7 @@
               />
             </div>
 
-            <div class="w-36 shrink-0">
+            <div class="w-full shrink-0 lg:w-55">
               <AutocompleteInput
                 v-model="b.version"
                 aria-label="Compare version"
