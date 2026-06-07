@@ -16,6 +16,12 @@
 			},
 			"problemMatcher": [],
 			"label": "npm: build"
+		},
+		{
+			"type": "npm",
+			"script": "lint",
+			"problemMatcher": [],
+			"label": "npm: lint"
 		}
 	]
 }

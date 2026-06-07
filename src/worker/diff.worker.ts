@@ -39,7 +39,7 @@ async function extract (
     detail: `${label}${fromCache ? ' (cached)' : ''}`,
   })
   const tar = await gunzip(bytes)
-  const entries = await untar(tar, abortController)
+  const entries = await untar(tar)
 
   await checkAborted(abortController)
 

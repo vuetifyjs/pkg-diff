@@ -6,7 +6,6 @@
  * `prefix` field for long paths, PAX extended headers (`x`) and GNU long names
  * (`L`). Directories and other entry types are skipped.
  */
-import { checkAborted } from '@/lib/check-aborted'
 
 export interface TarEntry {
   name: string
@@ -64,7 +63,7 @@ function parsePax (data: Uint8Array): Record<string, string> {
   return records
 }
 
-export async function untar (buf: Uint8Array, abortController: AbortController): Promise<TarEntry[]> {
+export async function untar (buf: Uint8Array): Promise<TarEntry[]> {
   const entries: TarEntry[] = []
   let offset = 0
   let nextNameOverride: string | null = null

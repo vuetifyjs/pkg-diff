@@ -62,7 +62,7 @@ function countPatch (patch: string): { added: number, removed: number } {
   return { added, removed }
 }
 
-async function toMap (entries: TarEntry[], abortController: AbortController): Promise<Map<string, Uint8Array>> {
+async function toMap (entries: TarEntry[]): Promise<Map<string, Uint8Array>> {
   const map = new Map<string, Uint8Array>()
   for (const e of entries) {
     const path = normalize(e.name)
@@ -89,10 +89,10 @@ export async function buildDiff (
   const matchers = exclude.map(g => globToRegExp(g))
   const excluded = (path: string) => matchers.some(re => re.test(path))
 
-  const mapA = await toMap(a.entries, abortController)
+  const mapA = await toMap(a.entries)
   await checkAborted(abortController)
 
-  const mapB = await toMap(b.entries, abortController)
+  const mapB = await toMap(b.entries)
   await checkAborted(abortController)
 
   const paths = new Set<string>()
