@@ -4,7 +4,7 @@
   import { computed, onMounted, reactive, ref, watch } from 'vue'
   import { useDiff } from '@/composables/useDiff'
   import { useRecentPackages } from '@/composables/useRecentPackages'
-  import { listVersions } from '@/lib/registry'
+  import { getRepoSlug, listVersions, resolveTarball } from '@/lib/registry'
   import AutocompleteInput from './AutocompleteInput.vue'
   import CopyButton from './CopyButton.vue'
   import LoadingState from './LoadingState.vue'
@@ -95,6 +95,32 @@
   const canShare = computed(() =>
     [a.name, a.version, b.name, b.version].every(v => v.trim() !== ''),
   )
+
+  // ---- Full source diff: when both sides are the same package, link out to a
+  // GitHub tag comparison on diffshub.com (resolving dist-tags to real versions).
+  const sourceDiffUrl = ref<string | null>(null)
+
+  watch([() => a.name, () => b.name, () => a.version, () => b.version], async () => {
+    sourceDiffUrl.value = null
+    const name = a.name.trim()
+    if (!name || name !== b.name.trim()) return
+
+    const token = name + a.version + b.version
+    try {
+      const [slug, av, bv] = await Promise.all([
+        getRepoSlug(name),
+        resolveTarball(name, a.version.trim() || 'latest'),
+        resolveTarball(name, b.version.trim() || 'latest'),
+      ])
+      // Bail if inputs changed while awaiting, the repo isn't on GitHub, or
+      // both sides resolved to the same version (nothing to diff).
+      if (token !== name + a.version + b.version) return
+      if (!slug || av.version === bv.version) return
+      sourceDiffUrl.value = `https://diffshub.com/${slug}/compare/v${av.version}...v${bv.version}`
+    } catch {
+      /* leave the link hidden on any resolution failure */
+    }
+  }, { immediate: true })
 
   const excludeMaps = ref(true)
   const excludeDts = ref(true)
@@ -293,6 +319,20 @@
           {{ loading ? 'Diffing…' : 'Compare' }}
         </button>
       </div>
+    </div>
+
+    <!-- Full source diff (same package, two versions) -->
+    <div v-if="sourceDiffUrl" class="-mt-2 mb-4 text-sm text-right mr-2">
+      <a
+        class="inline-flex items-center gap-1.5 text-primary hover:underline"
+        :href="sourceDiffUrl"
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        full source diff
+        <span aria-hidden="true">↗</span>
+        <span class="sr-only"> (opens diffshub.com in a new tab)</span>
+      </a>
     </div>
 
     <!-- Status -->
