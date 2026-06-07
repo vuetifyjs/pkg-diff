@@ -48,13 +48,13 @@ const decoder = new TextDecoder()
 /** Run the WASM unified-diff over two strings. */
 export async function diffText (a: string, b: string, abortController: AbortController): Promise<string> {
   const wasm = await initDiff(abortController)
-  await checkAborted(abortController)
+  // [REVERT L1] await checkAborted(abortController)
 
   const aBytes = encoder.encode(a)
-  await checkAborted(abortController)
+  // [REVERT L1] await checkAborted(abortController)
 
   const bBytes = encoder.encode(b)
-  await checkAborted(abortController)
+  // [REVERT L1] await checkAborted(abortController)
 
   const aPtr = aBytes.length > 0 ? wasm.alloc(aBytes.length) : 0
   const bPtr = bBytes.length > 0 ? wasm.alloc(bBytes.length) : 0

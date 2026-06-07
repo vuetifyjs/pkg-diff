@@ -125,7 +125,7 @@ export async function untar (buf: Uint8Array, abortController: AbortController):
     }
 
     offset = dataStart + padded
-    await checkAborted(abortController)
+    // [REVERT L4] await checkAborted(abortController)
   }
 
   return entries

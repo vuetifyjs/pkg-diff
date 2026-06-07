@@ -52,7 +52,7 @@ export interface ResolvedVersion {
 }
 
 /** Resolve a version or dist-tag (e.g. `latest`) to a concrete tarball URL. */
-export async function resolveTarball (name: string, versionOrTag: string, abortController: AbortController): Promise<ResolvedVersion> {
+export async function resolveTarball (name: string, versionOrTag: string, abortController?: AbortController): Promise<ResolvedVersion> {
   const pack = await fetchPackument(name, abortController)
   const version = pack['dist-tags']?.[versionOrTag] ?? versionOrTag
   const entry = pack.versions[version]
