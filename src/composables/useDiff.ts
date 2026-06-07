@@ -8,7 +8,8 @@ import { ref, shallowRef } from 'vue'
 
 export function useDiff () {
   const result = shallowRef<DiffResult | null>(null)
-  const loading = ref(false)
+  const aborting = shallowRef(false)
+  const loading = shallowRef(false)
   const stage = ref('')
   const detail = ref('')
   const error = ref('')
@@ -41,6 +42,17 @@ export function useDiff () {
         } // stale response from a superseded run
 
         switch (msg.type) {
+          case 'aborted': {
+            setTimeout(() => {
+              loading.value = false
+              aborting.value = false
+            }, 1000)
+            return
+          }
+          case 'aborting': {
+            aborting.value = true
+            return
+          }
           case 'progress': {
             stage.value = msg.stage
             detail.value = msg.detail ?? ''
@@ -82,5 +94,10 @@ export function useDiff () {
     worker = null
   }
 
-  return { result, loading, stage, detail, error, compare, dispose }
+  function abort () {
+    ensureWorker().postMessage({ type: 'abort', id: nextId })
+    aborting.value = true
+  }
+
+  return { result, loading, stage, detail, error, compare, abort, aborting, dispose }
 }

@@ -6,7 +6,7 @@
   import PierreFileDiff from './PierreFileDiff.vue'
   import PierreTree from './PierreTree.vue'
 
-  const { result, loading, stage, detail, error, compare } = useDiff()
+  const { abort, aborting, result, loading, stage, detail, error, compare } = useDiff()
 
   // The user's real use-case: latest `vuetify` vs the nightly channel.
   const a = reactive({ name: 'vuetify', version: 'latest' })
@@ -154,12 +154,64 @@
         </label>
 
         <button
-          class="ml-auto px-5 py-2 rounded-lg bg-primary text-on-primary font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
-          :disabled="loading"
+          v-show="loading"
+          class="flex flex-row items-center gap-2 ml-auto px-5 py-2 rounded-lg bg-primary text-on-primary font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+          :disabled="aborting"
+          type="button"
+          @click="abort"
+        >
+          <svg v-if="aborting" height="1em" viewBox="0 0 24 24" width="1em">
+            <path d="M0 0h24v24H0z" fill="none" />
+
+            <path
+              d="M12 3c4.97 0 9 4.03 9 9"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+            >
+              <animateTransform
+                attributeName="transform"
+                dur="1.5s"
+                repeatCount="indefinite"
+                type="rotate"
+                values="0 12 12;360 12 12"
+              />
+            </path>
+          </svg>
+
+          <span>{{ aborting ? 'Aborting…' : 'Abort' }}</span>
+        </button>
+
+        <button
+          class="flex flex-row items-center gap-2 ml-auto px-5 py-2 rounded-lg bg-primary text-on-primary font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+          :disabled="loading || aborting"
           type="button"
           @click="run"
         >
-          {{ loading ? 'Diffing…' : 'Compare' }}
+          <svg v-if="loading" height="1em" viewBox="0 0 24 24" width="1em">
+            <path d="M0 0h24v24H0z" fill="none" />
+
+            <path
+              d="M12 3c4.97 0 9 4.03 9 9"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+            >
+              <animateTransform
+                attributeName="transform"
+                dur="1.5s"
+                repeatCount="indefinite"
+                type="rotate"
+                values="0 12 12;360 12 12"
+              />
+            </path>
+          </svg>
+
+          <span>{{ loading ? 'Diffing…' : 'Compare' }}</span>
         </button>
       </div>
     </div>
