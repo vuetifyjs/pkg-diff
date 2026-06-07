@@ -158,7 +158,6 @@
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
     color: var(--v0-on-surface);
-    font-family: ui-monospace, monospace;
   }
   .field:focus-visible {
     outline: 2px solid var(--v0-primary);

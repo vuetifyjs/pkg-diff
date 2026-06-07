@@ -93,3 +93,9 @@
   <!-- Pierre renders the <file-tree-container> custom element inside this host. -->
   <div ref="host" class="pierre-tree-host h-full overflow-auto" :style="themeStyles" />
 </template>
+
+<style scoped>
+  .pierre-tree-host {
+    --trees-font-family-override: 'Recursive Variable', system-ui, sans-serif;
+  }
+</style>

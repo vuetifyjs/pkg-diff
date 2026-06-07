@@ -111,8 +111,9 @@
   /* Pierre's CSS lives in the custom element's shadow root; these custom
      properties inherit across the shadow boundary to theme it to match v0. */
   .pierre-diff-host {
-    --diffs-font-family: ui-monospace, 'SF Mono', Monaco, monospace;
+    --diffs-font-family: 'Recursive Mono', ui-monospace, 'SF Mono', Monaco, monospace;
     --diffs-font-size: 12px;
+    font-variation-settings: 'MONO' 1;
     --diffs-bg-override: var(--v0-background);
     --diffs-fg-override: var(--v0-on-surface);
     --diffs-fg-number-override: var(--v0-on-surface-variant);
