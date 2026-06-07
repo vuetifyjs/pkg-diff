@@ -70,8 +70,6 @@ async function toMap (entries: TarEntry[], abortController: AbortController): Pr
       map.set(path, e.bytes)
     }
     await checkAborted(abortController)
-
-    return map
   }
   return map
 }
