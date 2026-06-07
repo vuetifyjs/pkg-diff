@@ -14,8 +14,9 @@ import { registerPlugins } from '@/plugins'
 import App from './App.vue'
 
 // Styles
+import '@fontsource-variable/recursive/index.css'
+import '@/styles/recursive-mono.css'
 import 'virtual:uno.css'
-import 'unfonts.css'
 
 const app = createApp(App)
 

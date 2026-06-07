@@ -1,21 +1,10 @@
-import UnoCSS from 'unocss/vite';
 import { fileURLToPath, URL } from 'node:url'
 import Vue from '@vitejs/plugin-vue'
-import Fonts from 'unplugin-fonts/vite'
+import UnoCSS from 'unocss/vite'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  plugins: [Vue(), Fonts({
-    fontsource: {
-      families: [
-        {
-          name: 'Roboto',
-          weights: [100, 300, 400, 500, 700, 900],
-          styles: ['normal', 'italic'],
-        },
-      ],
-    },
-  }), UnoCSS()],
+  plugins: [Vue(), UnoCSS()],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('src', import.meta.url)),

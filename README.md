@@ -1,78 +1,90 @@
 # pkg-diff
 
-Scaffolded with Vuetify CLI.
+Diff two npm package versions **entirely in the browser**. Built as a static site
+(no server, no backend) on top of [Vuetify0](https://0.vuetifyjs.com/).
 
-## ❗️ Documentation
-
-- Primary docs: https://0.vuetifyjs.com/
-- Getting started guide: https://0.vuetifyjs.com/guide
-- Community support: https://community.vuetifyjs.com/
-- Issue tracker: https://issues.vuetifyjs.com/
-
-## 🧱 Stack
-
-- Framework: Vue 3 + Vite
-- UI Library: Vuetify0
-- Language: TypeScript
-- Package manager: pnpm
-
-## 🧭 Start Here
-
-- Main entry: `src/main.ts`
-- Main app component: `src/App.vue`
-- Main styles: `src/styles/`
-- Plugin setup: `src/plugins/`
-
-## 📁 Project Structure
-
-- `src/main.ts` — application entry point
-- `src/App.vue` — root component
-- `src/components/` — reusable Vue components
-- `src/plugins/` — plugin registration and setup
-- `src/styles/` — global styles and theme settings
-- `public/` — static public files
-
-## ✨ Enabled Features
-
-- ESLint
-- UnoCSS
-
-## 💿 Install
-
-Use your selected package manager (pnpm) to install dependencies:
+The original manual workflow this replaces:
 
 ```bash
-pnpm install
+# download + extract two tarballs, then:
+diff -r --exclude="*.map" --exclude="*.d.ts" \
+  ./vuetify-4.1.0/package/lib \
+  ./@vuetify__nightly-4.1.0-master.../package/lib
 ```
 
-## 🚀 Quick Start
+…now happens with two inputs and a button. The default comparison is the user's
+real use-case: `vuetify@latest` vs `@vuetify/nightly@latest`.
+
+## How it works
+
+Everything heavy runs in a **Web Worker** so the main thread stays responsive:
+
+1. **Resolve** — fetch the packument from `registry.npmjs.org` (sends
+   `Access-Control-Allow-Origin: *`, so no proxy needed) and turn a version or
+   dist-tag like `latest` into a concrete tarball URL.
+2. **Download + cache** — fetch the `.tgz`, storing bytes in the **Cache Storage
+   API** keyed by URL. Version tarballs are immutable, so cache hits are free and
+   never stale.
+3. **Extract** — gunzip with the native `DecompressionStream('gzip')` (no WASM
+   needed for this), then a small dependency-free tar parser handles ustar,
+   `prefix` long names, PAX (`x`) and GNU (`L`) headers. The leading `package/`
+   directory npm wraps everything in is stripped.
+4. **Diff** — file trees are compared for added / removed / modified. Modified
+   text files are line-diffed by a **Rust → WASM** module (the `similar` crate)
+   that produces a unified diff; binary files are detected and skipped.
+5. **Render** — results group by scope (`lib` / `dist` / `other`) with per-file
+   `+/-` counts and expandable unified diffs.
+
+### Layout
+
+```
+wasm/                      Rust crate → public/diff.wasm (C-ABI, no wasm-bindgen)
+public/diff.wasm           prebuilt module, served statically
+src/lib/
+  registry.ts              npm packument resolution + version listing
+  fetch-tarball.ts         Cache-Storage-backed tarball fetch
+  tar.ts                   DecompressionStream gunzip + tar parser
+  wasm-diff.ts             loads diff.wasm, marshals strings in/out of memory
+  diff-engine.ts           tree diff orchestration (pure, runs in worker)
+  types.ts                 shared, structured-clone-safe types
+src/worker/diff.worker.ts  the pipeline, off the main thread
+src/composables/useDiff.ts main-thread reactive handle for the worker
+src/components/            DiffApp / DiffFileRow / UnifiedDiff (Vuetify0 + UnoCSS)
+scripts/verify.mjs         Node end-to-end check against real npm packages
+```
+
+## Develop
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-## 🏗️ Build
+## Build (static site)
 
 ```bash
-pnpm build
+pnpm build:wasm   # only needed when wasm/ changes — output is committed
+pnpm build        # type-check + vite build → dist/ (deploy anywhere static)
+pnpm preview      # serve dist/ locally
 ```
 
-## 🧪 Available Scripts
+`dist/` is a fully static bundle: `index.html`, hashed JS/CSS, the worker chunk,
+and `diff.wasm` (served with `application/wasm`). Drop it on any static host.
 
-- `pnpm dev`
-- `pnpm build`
-- `pnpm preview`
-- `pnpm build-only`
-- `pnpm type-check`
-- `pnpm lint`
-- `pnpm lint:fix`
+### Rebuilding the WASM module
 
-## 💪 Support Vuetify Development
+Requires the Rust toolchain and the wasm target:
 
-This project uses Vuetify0 - an MIT licensed Open Source project. We are glad to welcome contributors and any support for ongoing development:
+```bash
+rustup target add wasm32-unknown-unknown
+pnpm build:wasm
+```
 
-- Contribute to Vuetify and ecosystem projects: https://github.com/vuetifyjs
-- Request enterprise support: https://support.vuetifyjs.com/
-- Sponsor on GitHub: https://github.com/sponsors/vuetifyjs
-- Support on Open Collective: https://opencollective.com/vuetify
+## Verify the pipeline
+
+Runs the real fetch → gunzip → untar → WASM-diff path in Node against live npm:
+
+```bash
+node scripts/verify.mjs                           # vuetify vs @vuetify/nightly
+node scripts/verify.mjs vue 3.5.0 vue 3.5.13      # any two name@version pairs
+```

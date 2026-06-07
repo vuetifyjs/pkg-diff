@@ -13,7 +13,12 @@ export default defineConfig({
   },
   preflights: [
     {
-      getCSS: () => `
+      getCSS: ({ theme }) => `
+        :root {
+          --font-sans: ${theme.font.sans.join(', ')};
+          --font-mono: ${theme.font.mono.join(', ')};
+        }
+
         html {
           scrollbar-gutter: stable;
         }
@@ -41,6 +46,17 @@ export default defineConfig({
     },
   ],
   theme: {
+    font: {
+      sans: [
+        '"Recursive Variable"',
+        'system-ui',
+        'sans-serif',
+      ],
+      mono: [
+        '"Recursive Mono"',
+        'monospace',
+      ],
+    },
     colors: {
       'primary': 'var(--v0-primary)',
       'secondary': 'var(--v0-secondary)',

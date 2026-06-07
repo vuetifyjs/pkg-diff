@@ -1,11 +1,12 @@
 <script lang="ts" setup>
-  import HelloWorld from '@/components/HelloWorld.vue'
+  import DiffApp from '@/components/DiffApp.vue'
 </script>
 
 <template>
   <div aria-hidden="true" class="mesh-bg" />
-  <main class="main-bg min-h-screen p-4 flex items-center">
-    <HelloWorld />
+
+  <main class="main-bg min-h-screen p-4 sm:p-8 flex items-start justify-center">
+    <DiffApp />
   </main>
 </template>
 
