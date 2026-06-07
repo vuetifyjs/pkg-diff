@@ -6,6 +6,7 @@
   import { useRecentPackages } from '@/composables/useRecentPackages'
   import { listVersions } from '@/lib/registry'
   import AutocompleteInput from './AutocompleteInput.vue'
+  import CopyButton from './CopyButton.vue'
   import PierreFileDiff from './PierreFileDiff.vue'
   import PierreTree from './PierreTree.vue'
 
@@ -93,20 +94,6 @@
   const canShare = computed(() =>
     [a.name, a.version, b.name, b.version].every(v => v.trim() !== ''),
   )
-  const copied = ref(false)
-
-  async function share () {
-    if (!canShare.value) return
-    try {
-      await navigator.clipboard.writeText(shareUrl.value)
-      copied.value = true
-      globalThis.setTimeout(() => {
-        copied.value = false
-      }, 1500)
-    } catch {
-      /* clipboard unavailable (insecure context / denied) */
-    }
-  }
 
   const excludeMaps = ref(true)
   const excludeDts = ref(true)
@@ -289,48 +276,12 @@
           <code class="text-xs opacity-70">*.min.*</code>
         </label>
 
-        <button
-          :aria-label="copied ? 'Link copied' : 'Copy shareable link'"
-          class="ml-auto w-9 h-9 shrink-0 inline-flex items-center justify-center rounded-lg border border-subtle hover:bg-surface-tint hover:border-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-subtle"
-          :class="copied ? 'text-success border-success' : 'text-on-surface'"
+        <CopyButton
+          class="ml-auto"
           :disabled="!canShare"
-          :title="copied ? 'Link copied!' : 'Copy shareable link'"
-          type="button"
-          @click="share"
-        >
-          <svg
-            v-if="copied"
-            aria-hidden="true"
-            fill="none"
-            height="18"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2.5"
-            viewBox="0 0 24 24"
-            width="18"
-          >
-            <path d="M20 6 9 17l-5-5" />
-          </svg>
-
-          <svg
-            v-else
-            aria-hidden="true"
-            fill="none"
-            height="18"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            width="18"
-          >
-            <circle cx="18" cy="5" r="3" />
-            <circle cx="6" cy="12" r="3" />
-            <circle cx="18" cy="19" r="3" />
-            <path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" />
-          </svg>
-        </button>
+          label="Copy shareable link"
+          :value="shareUrl"
+        />
 
         <button
           class="px-5 py-2 rounded-lg bg-primary text-on-primary font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
