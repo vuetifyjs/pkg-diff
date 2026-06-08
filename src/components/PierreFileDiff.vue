@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import type { FileEntry, FileStatus } from '@/lib/types'
   import { FileDiff, processFile } from '@pierre/diffs'
+  import { useMediaQuery } from '@vuetify/v0'
   import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
   import CopyButton from './CopyButton.vue'
 
@@ -8,6 +9,11 @@
 
   const host = ref<HTMLElement>()
   let instance: FileDiff | null = null
+
+  // In forced-colors mode the OS palette overrides our +/- background tints, so
+  // colour alone no longer distinguishes additions from deletions. Switch to
+  // Pierre's literal +/- glyphs and drop the now-meaningless backgrounds.
+  const { matches: forcedColors } = useMediaQuery('(forced-colors: active)')
 
   const headerLabel: Record<FileStatus, string> = {
     added: 'Added',
@@ -42,6 +48,8 @@
       themeType: 'dark',
       overflow: 'scroll',
       disableFileHeader: true,
+      diffIndicators: forcedColors.value ? 'classic' : 'bars',
+      disableBackground: forcedColors.value,
     })
 
     const fileDiff = buildFileDiff(props.file)
@@ -52,8 +60,9 @@
 
   onMounted(render)
 
-  // Recreate the instance per file — cheap, and avoids stale internal DOM/state.
-  watch(() => props.file, () => {
+  // Recreate the instance per file (cheap, avoids stale internal DOM/state) and
+  // when forced-colors toggles, since diffIndicators is a constructor option.
+  watch([() => props.file, forcedColors], () => {
     instance?.cleanUp()
     instance = null
     render()

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { useClickOutside } from '@vuetify/v0'
+  import { createFilter, useClickOutside } from '@vuetify/v0'
   import { computed, ref, watch } from 'vue'
 
   const props = withDefaults(defineProps<{
@@ -28,13 +28,16 @@
   const expanded = ref(false)
   const highlighted = ref(-1)
 
-  // Filter by the current text, but show the full list when the text exactly
-  // matches an item (i.e. right after a selection) so reopening isn't filtered.
-  const filtered = computed(() => {
-    const q = model.value.trim().toLowerCase()
-    if (!q || props.items.includes(model.value)) return props.items
-    return props.items.filter(i => i.toLowerCase().includes(q))
-  })
+  // Case-insensitive substring match via v0's filter (returns all items on an
+  // empty query).
+  const filter = createFilter()
+  const { items: matches } = filter.apply(() => model.value.trim(), () => props.items)
+
+  // Show the full list when the text exactly matches an item (i.e. right after
+  // a selection) so reopening isn't filtered.
+  const filtered = computed(() =>
+    props.items.includes(model.value) ? props.items : matches.value,
+  )
 
   const hasMore = computed(() => !expanded.value && filtered.value.length > props.maxVisible)
   const visible = computed(() =>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-  import { computed, nextTick, reactive, ref, watch } from 'vue'
+  import { computed, nextTick, ref, watch } from 'vue'
+  import { storage } from '@/lib/storage'
 
   /**
    * Toggle chips for glob patterns to exclude from the diff. Built-in chips are
@@ -11,69 +12,33 @@
   defineProps<{ patterns?: string[] }>()
   const emit = defineEmits<{ 'update:patterns': [string[]] }>()
 
-  const CUSTOM_KEY = 'pkg-diff:exclude-custom'
-  const BUILTIN_KEY = 'pkg-diff:exclude-builtins'
   const MAX_LEN = 20
 
-  const builtins = reactive([
-    { label: '*.map', patterns: ['*.map'], active: true },
-    { label: '*.d.ts', patterns: ['*.d.ts', '*.d.mts', '*.d.cts'], active: true },
-    { label: '*.min.*', patterns: ['*.min.*'], active: false },
-  ])
+  // Fixed built-ins with their default on/off state.
+  const BUILTINS = [
+    { label: '*.map', patterns: ['*.map'], default: true },
+    { label: '*.d.ts', patterns: ['*.d.ts', '*.d.mts', '*.d.cts'], default: true },
+    { label: '*.min.*', patterns: ['*.min.*'], default: false },
+  ]
 
-  function save (key: string, value: unknown) {
-    try {
-      localStorage.setItem(key, JSON.stringify(value))
-    } catch {
-      /* storage unavailable (private mode / quota) — keep in-memory only */
-    }
-  }
+  // Persisted state (auto-saved via each storage ref's deep watch):
+  // built-in on/off overrides keyed by label, and the user-added chips.
+  const builtinState = storage.get<Record<string, boolean>>('exclude-builtins', {})
+  const custom = storage.get<{ label: string, active: boolean }[]>('exclude-custom', [])
 
-  // Apply saved on/off overrides onto the built-in defaults.
-  try {
-    const parsed = JSON.parse(localStorage.getItem(BUILTIN_KEY) ?? 'null')
-    if (parsed && typeof parsed === 'object') {
-      for (const f of builtins) {
-        if (typeof parsed[f.label] === 'boolean') f.active = parsed[f.label]
-      }
-    }
-  } catch {
-    /* ignore malformed/unavailable storage */
-  }
-
-  function persistBuiltins () {
-    save(BUILTIN_KEY, Object.fromEntries(builtins.map(f => [f.label, f.active])))
-  }
-
-  function loadCustom (): { label: string, active: boolean }[] {
-    try {
-      const raw = localStorage.getItem(CUSTOM_KEY)
-      const parsed = raw ? JSON.parse(raw) : []
-      return Array.isArray(parsed)
-        ? parsed
-          .filter(x => x && typeof x.label === 'string')
-          .map(x => ({ label: x.label as string, active: x.active !== false }))
-        : []
-    } catch {
-      return []
-    }
-  }
-
-  const custom = reactive(loadCustom())
-
-  function persistCustom () {
-    save(CUSTOM_KEY, custom)
+  const isBuiltinActive = (b: typeof BUILTINS[number]) => builtinState.value[b.label] ?? b.default
+  function toggleBuiltin (b: typeof BUILTINS[number]) {
+    builtinState.value[b.label] = !isBuiltinActive(b)
   }
 
   const activePatterns = computed(() => [
-    ...builtins.flatMap(f => (f.active ? f.patterns : [])),
-    ...custom.flatMap(f => (f.active ? [f.label] : [])),
+    ...BUILTINS.flatMap(b => (isBuiltinActive(b) ? b.patterns : [])),
+    ...custom.value.flatMap(f => (f.active ? [f.label] : [])),
   ])
   watch(activePatterns, v => emit('update:patterns', v), { immediate: true })
 
   function removeCustom (index: number) {
-    custom.splice(index, 1)
-    persistCustom()
+    custom.value.splice(index, 1)
   }
 
   const editing = ref(false)
@@ -106,10 +71,9 @@
     const label = (draftEl.value?.textContent ?? '').trim().slice(0, MAX_LEN)
     editing.value = false
     if (!label) return
-    const exists = builtins.some(f => f.label === label) || custom.some(f => f.label === label)
+    const exists = BUILTINS.some(b => b.label === label) || custom.value.some(f => f.label === label)
     if (exists) return
-    custom.push({ label, active: true })
-    persistCustom()
+    custom.value.push({ label, active: true })
   }
 
   function cancelDraft () {
@@ -119,17 +83,17 @@
 
 <template>
   <button
-    v-for="filter in builtins"
-    :key="filter.label"
-    :aria-pressed="filter.active"
+    v-for="builtin in BUILTINS"
+    :key="builtin.label"
+    :aria-pressed="isBuiltinActive(builtin)"
     class="inline-flex items-center px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors"
-    :class="filter.active
+    :class="isBuiltinActive(builtin)
       ? 'bg-primary text-on-primary border-primary'
       : 'bg-surface-tint hover:bg-surface-variant border-subtle text-on-surface opacity-60'"
     type="button"
-    @click="filter.active = !filter.active; persistBuiltins()"
+    @click="toggleBuiltin(builtin)"
   >
-    <code class="text-xs">{{ filter.label }}</code>
+    <code class="text-xs">{{ builtin.label }}</code>
   </button>
 
   <span
@@ -142,8 +106,8 @@
       : 'bg-surface-tint hover:bg-surface-variant border-subtle text-on-surface opacity-60'"
     role="button"
     tabindex="0"
-    @click="filter.active = !filter.active; persistCustom()"
-    @keydown.enter.prevent="filter.active = !filter.active; persistCustom()"
+    @click="filter.active = !filter.active"
+    @keydown.enter.prevent="filter.active = !filter.active"
   >
     <code class="text-xs">{{ filter.label }}</code>
 
