@@ -467,7 +467,7 @@
 
       <a
         class="inline-flex items-center gap-2 hover:text-on-surface transition-colors"
-        href="https://github.com/J-Sek/npm-package-diff"
+        href="https://github.com/vuetifyjs/pkg-diff"
         rel="noopener noreferrer"
         target="_blank"
       >
