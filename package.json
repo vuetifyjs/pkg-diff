@@ -4,6 +4,7 @@
   "type": "module",
   "version": "0.0.0",
   "license": "GPL-3.0-only",
+  "packageManager": "pnpm@10.26.1",
   "scripts": {
     "dev": "vite",
     "build:wasm": "cargo build --release --manifest-path wasm/Cargo.toml --target wasm32-unknown-unknown && cp wasm/target/wasm32-unknown-unknown/release/pkgdiff.wasm public/diff.wasm",
