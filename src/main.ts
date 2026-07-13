@@ -20,7 +20,7 @@ import '@/styles/recursive-mono.css'
 import 'virtual:uno.css'
 
 init({
-  domain: 'pkg-diff.netlify.app',
+  domain: 'pkg-diff.vuetifyjs.com',
 })
 
 const app = createApp(App)
